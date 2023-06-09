@@ -1,0 +1,39 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project.optional-dependencies]
+dev = [
+    "ml_utils[test]",
+    "pre-commit",
+]
+test = [
+    "pytest",
+]
+
+[project]
+name = "ml_utils"
+authors = [
+    { name = "Ho-Min Liu" },
+]
+description = "Utilities for machine learning model training."
+requires-python = ">=3.8"
+dependencies = [
+    "colorama",
+    "imblearn",
+    "matplotlib>=3.3",
+    "numpy>=1.22",
+    "pandas>=1.1, <2.0",
+    "seaborn>=0.11",
+    "scikit-learn==1.2.2",
+    "shap==0.40.0",
+    "tabulate",
+    "xgboost==1.7.5",
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/hominliu/ML_utils"
+
+[project.scripts]
+ml_utils = "ml_utils.main:main"
