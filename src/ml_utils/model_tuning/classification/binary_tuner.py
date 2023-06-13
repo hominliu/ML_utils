@@ -1,5 +1,8 @@
-from typing import Any, Dict, Optional
+import contextlib
+import os
+from typing import Any, Dict, Optional, Tuple
 
+import lightgbm as lgb
 import xgboost as xgb
 from imblearn.ensemble import BalancedRandomForestClassifier
 from sklearn.ensemble import (
@@ -17,10 +20,10 @@ class BinaryTunerAdaBoost(BasicTuner):
         self,
         set_n_estimators: int = None,
         set_learning_rate: float = None,
-        random_state: int = 1020,
+        random_state: int = 2731,
     ):
-        """Hyper-parameters tuning for AdaBoost Model and present training
-        results with best set of hyper-parameters.
+        """Hyper-parameters tuning for AdaBoost Model and present training results
+        with best set of hyper-parameters.
         The default setting will iterate through combinations of 2 AdaBoost
         hyper-parameters:
         6 sets of [n_estimators] ([50, 100, 150, 200, 250, 300])
@@ -58,7 +61,7 @@ class BinaryTunerAdaBoost(BasicTuner):
             find_min_matrix=False,
         )
 
-    def _cross_validate(self, train_X, train_y, params: dict):
+    def _cross_validate(self, train_X, train_y, params: dict) -> Tuple[float, float]:
         """AdaBoost cross-validator that provides cv scores for both training and
         testing set based on provided hyper-parameters
 
@@ -121,7 +124,7 @@ class BinaryTunerBalancedRandomForest(BasicTuner):
         set_max_depth: int = None,
         set_max_features: float = None,
         set_max_samples: float = None,
-        random_state: int = 1020,
+        random_state: int = 2731,
     ):
         """Hyper-parameters tuning for BalancedRandomForest Model and present
         training results with best set of hyper-parameters.
@@ -182,7 +185,7 @@ class BinaryTunerBalancedRandomForest(BasicTuner):
             find_min_matrix=False,
         )
 
-    def _cross_validate(self, train_X, train_y, params: dict):
+    def _cross_validate(self, train_X, train_y, params: dict) -> Tuple[float, float]:
         """BalancedRandomForest cross-validator that provides cv scores for both
         training and testing set based on provided hyper-parameters
 
@@ -249,7 +252,7 @@ class BinaryTunerExtraTrees(BasicTuner):
         max_depth_max: int = 10,
         set_max_depth: int = None,
         set_max_features: float = None,
-        random_state: int = 1020,
+        random_state: int = 2731,
     ):
         """Hyper-parameters tuning for ExtraTrees Model and present
         training results with best set of hyper-parameters.
@@ -305,8 +308,9 @@ class BinaryTunerExtraTrees(BasicTuner):
             find_min_matrix=False,
         )
 
-    def _cross_validate(self, train_X, train_y, params: dict):
-        """
+    def _cross_validate(self, train_X, train_y, params: dict) -> Tuple[float, float]:
+        """ExtraTrees cross-validator that provides cv scores for both training and
+        testing set based on provided hyper-parameters
 
         Args:
             train_X: n_samples by n_features matrix, training data from training set.
@@ -336,7 +340,7 @@ class BinaryTunerExtraTrees(BasicTuner):
     def _train_final_model(
         self, train_X, train_y, test_X, test_y, best_params: Dict[str, Any], **kwargs
     ):
-        """train  final model with hyper-parameters get from tuning process
+        """train ExtraTrees final model with hyper-parameters get from tuning process
 
         Args:
             train_X: n_samples by n_features matrix, training data from training set.
@@ -361,6 +365,210 @@ class BinaryTunerExtraTrees(BasicTuner):
         return final_model, train_proba, test_proba
 
 
+class BinaryTunerLightGBM(BasicTuner):
+    def __init__(
+        self,
+        max_depth_max: int = 10,
+        set_max_depth: int = None,
+        set_scale_pos_weight: Optional[float] = None,
+        set_bagging_fraction: float = None,
+        set_feature_fraction: float = None,
+        random_state: int = 2731,
+    ):
+        """Hyper-parameters tuning for LightGBM Model and present training results
+        with best set of hyper-parameters.
+
+        The default setting will iterate through combinations of 3 LightGBM hyper-
+        parameters:
+        5 sets of [bagging_fraction] ([1.0, 0.875, 0.75, 0.625, 0.5]),
+        5 sets of [colsample_bytree] [1.0, 0.875, 0.75, 0.625, 0.5],
+        and 5 sets of [max_depth] ([6, 7, 8, 9, 10]).
+        User can use "max_depth_max" to decide the maximum of [max_depth] and function
+        function will auto-generate a list of 5 consecutive integers with
+        maximum as the specified max_depth_max.
+        For Example, if "max_depth_max" = 7, the function will iterate through
+        [max_depth] = [3, 4, 5, 6, 7].
+        User can all use "set_subsample", "set_max_depth", and "set_colsample_bytree"
+         to set each hyper-parameter as single
+        value.
+
+        Args:
+            max_depth_max: the maximum of the max_depth in LightGBM that hyper-
+                parameters tuning will iterate through.
+            set_max_depth: set LightGBM hyper-parameter [max_depth] to a single value.
+            set_scale_pos_weight: set LightGBM hyper-parameter [scale_pos_weight] to a
+                single value.
+            set_bagging_fraction: set LightGBM hyper-parameter [set_subsample] to a
+                single value.
+            set_feature_fraction: set LightGBM hyper-parameter [colsample_bytree] to a
+                single value.
+            random_state: control randomness of the model training in order to get
+                repetitive results.
+        """
+        # Check hyper-parameters
+        if set_scale_pos_weight:
+            assert (
+                set_scale_pos_weight >= 0
+            ), "[scale_pos_weight] should be larger than or equal to 0."
+        assert max_depth_max > 0, "[max_depth_max] should be positive integer."
+
+        super().__init__(
+            model_type="XGBoost",
+            training_params={
+                "num_boost_round": 200,
+                "n_fold": 5,
+                "early_stopping_rounds": 5,
+                "random_state": random_state,
+            },
+            hyper_params_tuning_values={
+                "max_depth": (
+                    [set_max_depth]
+                    if set_max_depth
+                    else list(range(max_depth_max + 1))[-5:]
+                ),
+                "bagging_fraction": (
+                    [set_bagging_fraction]
+                    if set_bagging_fraction
+                    else [1.0, 0.875, 0.75, 0.625, 0.5]
+                ),  # equivalent to "subsample"
+                "feature_fraction": (
+                    [set_feature_fraction]
+                    if set_feature_fraction
+                    else [1.0, 0.875, 0.75, 0.625, 0.5]
+                ),  # equivalent to "colsample_bytree"
+            },
+            fixed_hyper_params={
+                "objective": "binary",
+                "learning_rate": 0.1,
+                "num_leaves": None,
+                "scale_pos_weight": set_scale_pos_weight,
+            },
+            find_min_matrix=True,
+        )
+
+        # update hyper-parameters: num_leaves
+        for param_set in self.hyper_params_sets:
+            param_set.update({"num_leaves": pow(2, param_set.get("max_depth")) - 1})
+
+    def _cross_validate(self, train_X, train_y, params: dict) -> Tuple[float, float]:
+        """LightGBM cross-validator that provides cv scores for both training and
+        testing set based on provided hyper-parameters
+
+        Args:
+            train_X: n_samples by n_features matrix, training data from training set.
+            train_y: 1d array-like, ground truth target values from training set.
+            params: dictionary with key as model hyper-parameter and value as
+                hyper-parameter value
+        Return:
+            average training error
+            average testing error
+        """
+        train_data = lgb.Dataset(train_X, label=train_y)
+
+        with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
+            cv_results = lgb.cv(
+                params=params,
+                train_set=train_data,
+                num_boost_round=self.training_params.get("num_boost_round"),
+                nfold=self.training_params.get("n_fold"),
+                stratified=True,
+                metrics="",  # corresponding to specified objective
+                seed=self.training_params.get("random_state"),
+                eval_train_metric=True,
+                callbacks=[
+                    lgb.early_stopping(
+                        stopping_rounds=self.training_params.get(
+                            "early_stopping_rounds"
+                        ),
+                    )
+                ],
+            )
+
+        best_on_valid_idx = cv_results["valid binary_logloss-mean"].index(
+            min(cv_results["valid binary_logloss-mean"])
+        )
+
+        return (
+            float(cv_results["train binary_logloss-mean"][best_on_valid_idx]),
+            float(cv_results["valid binary_logloss-mean"][best_on_valid_idx]),
+        )
+
+    def _train_final_model(
+        self,
+        train_X,
+        train_y,
+        test_X,
+        test_y,
+        best_params: Dict[str, Any],
+        use_default_api: bool = False,
+        **kwargs,
+    ):
+        """train LightGBM final model with hyper-parameters get from tuning process
+
+        Args:
+            train_X: n_samples by n_features matrix, training data from training set.
+            train_y: 1d array-like, ground truth target values from training set.
+            test_X: n_samples by n_features matrix, data from testing set.
+            test_y: 1d array-like, ground truth target values from testing set.
+            best_params: dictionary of best combination of hyper-parameters
+            use_default_api: use xgboost api to train model if True, else use sklearn
+                api to train the model
+        Return:
+            fitted XGBClassifier
+        """
+        if use_default_api:
+            train_data = lgb.Dataset(train_X, label=train_y)
+            test_data = lgb.Dataset(test_X, label=test_y)
+
+            with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
+                final_model = lgb.train(
+                    params=best_params,
+                    train_set=train_data,
+                    num_boost_round=self.training_params.get("num_boost_round"),
+                    valid_sets=[test_data],
+                    callbacks=[
+                        lgb.early_stopping(
+                            stopping_rounds=self.training_params.get(
+                                "early_stopping_rounds"
+                            ),
+                        )
+                    ],
+                )
+
+            train_proba = final_model.predict(
+                train_X, num_iteration=final_model.best_iteration
+            )
+            test_proba = final_model.predict(
+                test_X, num_iteration=final_model.best_iteration
+            )
+        else:
+            final_model = lgb.LGBMClassifier(
+                num_leaves=best_params.get("num_leaves"),
+                max_depth=best_params.get("max_depth"),
+                learning_rate=best_params.get("learning_rate"),
+                subsample=best_params.get("bagging_fraction"),
+                colsample_bytree=best_params.get("feature_fraction"),
+                scale_pos_weight=best_params.get("scale_pos_weight"),
+            )
+            final_model.fit(
+                train_X,
+                train_y,
+                eval_set=[(test_X, test_y)],
+                callbacks=[
+                    lgb.early_stopping(
+                        stopping_rounds=self.training_params.get(
+                            "early_stopping_rounds"
+                        ),
+                    )
+                ],
+            )
+
+            train_proba = final_model.predict_proba(train_X)[:, 1]
+            test_proba = final_model.predict_proba(test_X)[:, 1]
+
+        return final_model, train_proba, test_proba
+
+
 class BinaryTunerRandomForest(BasicTuner):
     def __init__(
         self,
@@ -369,7 +577,7 @@ class BinaryTunerRandomForest(BasicTuner):
         set_max_depth: int = None,
         set_max_features: float = None,
         set_max_samples: float = None,
-        random_state: int = 1020,
+        random_state: int = 2731,
     ):
         """Hyper-parameters tuning for RandomForest Model and present
         training results with best set of hyper-parameters.
@@ -430,7 +638,8 @@ class BinaryTunerRandomForest(BasicTuner):
         )
 
     def _cross_validate(self, train_X, train_y, params: dict):
-        """
+        """RandomForest cross-validator that provides cv scores for both training and
+        testing set based on provided hyper-parameters
 
         Args:
             train_X: n_samples by n_features matrix, training data from training set.
@@ -461,7 +670,7 @@ class BinaryTunerRandomForest(BasicTuner):
     def _train_final_model(
         self, train_X, train_y, test_X, test_y, best_params: Dict[str, Any], **kwargs
     ):
-        """train  final model with hyper-parameters get from tuning process
+        """train RandomForest final model with hyper-parameters get from tuning process
 
         Args:
             train_X: n_samples by n_features matrix, training data from training set.
@@ -496,7 +705,7 @@ class BinaryTunerXGBoost(BasicTuner):
         set_scale_pos_weight: Optional[float] = None,
         set_subsample: float = None,
         set_colsample_bytree: float = None,
-        random_state: int = 1020,
+        random_state: int = 2731,
     ):
         """Hyper-parameters tuning for XGBoost Model and present training
         results with best set of hyper-parameters.
@@ -581,7 +790,7 @@ class BinaryTunerXGBoost(BasicTuner):
             find_min_matrix=True,
         )
 
-    def _cross_validate(self, train_X, train_y, params: dict):
+    def _cross_validate(self, train_X, train_y, params: dict) -> Tuple[float, float]:
         """XGBoost cross-validator that provides cv scores for both training and
         testing set based on provided hyper-parameters
 

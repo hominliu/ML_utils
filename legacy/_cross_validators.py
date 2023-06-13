@@ -15,7 +15,7 @@ def _cross_validator_adaboost(
     training_y,
     params: Dict = None,
     n_fold: int = 5,
-    random_seed: int = 1020,
+    random_seed: int = 2731,
 ) -> Tuple[float, float]:
     """AdaBoost cross-validator that provides cv scores for both
     training and testing set based on provided hyper-parameters
@@ -62,7 +62,7 @@ def _cross_validator_balanced_random_forest(
     training_y,
     params: Dict = None,
     n_fold: int = 5,
-    random_seed: int = 1020,
+    random_seed: int = 2731,
 ) -> Tuple[float, float]:
     """BalancedRandomForest cross-validator that provides cv scores for
     both training and testing set based on provided hyper-parameters
@@ -110,7 +110,7 @@ def _cross_validator_extra_trees(
     training_y,
     params: Dict = None,
     n_fold: int = 5,
-    random_seed: int = 1020,
+    random_seed: int = 2731,
 ) -> Tuple[float, float]:
     """ExtraTrees cross-validator that provides cv scores for both
     training and testing set based on provided hyper-parameters
@@ -157,7 +157,7 @@ def _cross_validator_random_forest(
     training_y,
     params: Dict = None,
     n_fold: int = 5,
-    random_seed: int = 1020,
+    random_seed: int = 2731,
 ) -> Tuple[float, float]:
     """RandomForest cross-validator that provides cv scores for both
     training and testing set based on provided hyper-parameters
@@ -206,7 +206,7 @@ def _cross_validator_xgboost(
     n_fold: int = 5,
     num_boost: int = 200,
     early_stop: int = 5,
-    random_seed: int = 1020,
+    random_seed: int = 2731,
 ) -> Tuple[float, float]:
     """XGBoost cross-validator that provides cv scores for both
     training and testing set based on provided hyper-parameters

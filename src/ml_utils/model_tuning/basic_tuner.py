@@ -79,9 +79,9 @@ class BasicTuner(ABC):
         Return:
             dictionary of best combination of hyper-parameters
         """
-        assert len(train_cv_scores) == len(
-            test_cv_scores
-        ), "length of 'test_cv_scores' does not match the length of 'train_cv_scores'"
+        assert len(train_cv_scores) == len(test_cv_scores), (
+            "length of 'test_cv_scores' does not match the length of 'train_cv_scores'"
+        )
         assert len(train_cv_scores) == len(self.hyper_params_sets), (
             "length of 'train_cv_scores' does not match the length of "
             "'hyper_params_sets'"

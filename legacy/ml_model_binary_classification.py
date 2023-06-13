@@ -106,7 +106,7 @@ def binary_classification_adaboost(
         params_sets=params_sets,
         model_type=model_type,
         n_fold=n_fold,
-        random_seed=kwargs.get("random_seed", 160771),
+        random_seed=kwargs.get("random_seed", 2731),
     )
     # Load best parameters based on testing set's error
     best_params = _load_best_hyperparameter(
@@ -122,7 +122,7 @@ def binary_classification_adaboost(
     adaboost_final_model = AdaBoostClassifier(
         learning_rate=best_params.get("learning_rate"),
         n_estimators=best_params.get("n_estimators"),
-        random_state=kwargs.get("random_seed", 160771),
+        random_state=kwargs.get("random_seed", 2731),
     )
     adaboost_final_model.fit(training_X, training_y)
 
@@ -266,7 +266,7 @@ def binary_classification_balanced_random_forest(
         params_sets=params_sets,
         model_type=model_type,
         n_fold=n_fold,
-        random_seed=kwargs.get("random_seed", 160771),
+        random_seed=kwargs.get("random_seed", 2731),
     )
     # Load best parameters based on testing set's error
     best_params = _load_best_hyperparameter(
@@ -284,7 +284,7 @@ def binary_classification_balanced_random_forest(
         max_samples=best_params.get("max_samples"),
         max_features=best_params.get("max_features"),
         n_estimators=best_params.get("n_estimators"),
-        random_state=kwargs.get("random_seed", 160771),
+        random_state=kwargs.get("random_seed", 2731),
     )
     balanced_random_forest_final_model.fit(training_X, training_y)
 
@@ -516,7 +516,7 @@ def binary_classification_extra_trees(
         params_sets=params_sets,
         model_type=model_type,
         n_fold=n_fold,
-        random_seed=kwargs.get("random_seed", 160771),
+        random_seed=kwargs.get("random_seed", 2731),
     )
     # Load best parameters based on testing set's error
     best_params = _load_best_hyperparameter(
@@ -533,7 +533,7 @@ def binary_classification_extra_trees(
         max_depth=best_params.get("max_depth"),
         max_features=best_params.get("max_features"),
         n_estimators=best_params.get("n_estimators"),
-        random_state=kwargs.get("random_seed", 160771),
+        random_state=kwargs.get("random_seed", 2731),
     )
     extra_trees_final_model.fit(training_X, training_y)
 
@@ -675,7 +675,7 @@ def binary_classification_random_forest(
         params_sets=params_sets,
         model_type=model_type,
         n_fold=n_fold,
-        random_seed=kwargs.get("random_seed", 160771),
+        random_seed=kwargs.get("random_seed", 2731),
     )
     # Load best parameters based on testing set's error
     best_params = _load_best_hyperparameter(
@@ -693,7 +693,7 @@ def binary_classification_random_forest(
         max_samples=best_params.get("max_samples"),
         max_features=best_params.get("max_features"),
         n_estimators=best_params.get("n_estimators"),
-        random_state=kwargs.get("random_seed", 160771),
+        random_state=kwargs.get("random_seed", 2731),
     )
     random_forest_final_model.fit(training_X, training_y)
 
@@ -870,7 +870,7 @@ def binary_classification_xgboost(
         n_fold=n_fold,
         num_boost=num_boost,
         early_stop=early_stop,
-        random_seed=kwargs.get("random_seed", 160771),
+        random_seed=kwargs.get("random_seed", 2731),
     )
     # Load best parameters based on testing set's error
     best_params = _load_best_hyperparameter(

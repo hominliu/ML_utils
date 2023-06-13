@@ -21,6 +21,7 @@ requires-python = ">=3.8"
 dependencies = [
     "colorama",
     "imblearn",
+    "lightgbm==3.3.5",
     "matplotlib>=3.3",
     "numpy>=1.22",
     "pandas>=1.1, <2.0",
