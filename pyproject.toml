@@ -16,7 +16,7 @@ name = "ml_utils"
 authors = [
     { name = "Ho-Min Liu" },
 ]
-description = "Utilities for model training."
+description = "Utilities for machine learning model training."
 requires-python = ">=3.8"
 dependencies = [
     "colorama",
@@ -34,7 +34,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-"Homepage" = "https://github.com/A160771/ML_utils"
+"Homepage" = "https://github.com/hominliu/ML_utils"
 
 [project.scripts]
 ml_utils = "ml_utils.main:main"
